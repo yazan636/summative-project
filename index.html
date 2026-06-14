@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Session Planner</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f8;
+    padding:20px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+h1{
+    text-align:center;
+}
+
+input{
+    padding:10px;
+    margin:5px;
+}
+
+button{
+    padding:10px 15px;
+    background:#2c7be5;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#155ec4;
+}
+
+.assignment{
+    padding:12px;
+    margin-top:10px;
+    border-radius:8px;
+}
+
+.high{
+    background:#ffcccc;
+}
+
+.medium{
+    background:#fff3cd;
+}
+
+.low{
+    background:#d4edda;
+}
+
+#urgentTask{
+    font-weight:bold;
+    margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Study Session Planner</h1>
+
+<input type="text" id="assignmentName" placeholder="Assignment Name">
+
+<input type="date" id="dueDate">
+
+<input type="number" id="studyHours" placeholder="Hours Needed">
+
+<button onclick="addAssignment()">Add Assignment</button>
+
+<h2>Most Urgent Task</h2>
+<div id="urgentTask">None</div>
+
+<h2>Study Plan</h2>
+<div id="assignmentList"></div>
+
+</div>
+
+<script>
+
+let assignments = [];
+
+function addAssignment(){
+
+    let name = document.getElementById("assignmentName").value;
+    let dueDate = document.getElementById("dueDate").value;
+    let hours = Number(document.getElementById("studyHours").value);
+
+    if(name === "" || dueDate === "" || hours <= 0){
+        alert("Please complete all fields.");
+        return;
+    }
+
+    let priority = calculatePriority(dueDate,hours);
+
+    assignments.push({
+        name:name,
+        dueDate:dueDate,
+        hours:hours,
+        priority:priority
+    });
+
+    assignments.sort((a,b)=>b.priority-a.priority);
+
+    displayAssignments();
+
+    document.getElementById("assignmentName").value="";
+    document.getElementById("dueDate").value="";
+    document.getElementById("studyHours").value="";
+}
+
+function calculatePriority(dueDate,hours){
+
+    let today = new Date();
+
+    let due = new Date(dueDate);
+
+    let difference =
+        Math.ceil(
+            (due - today) /
+            (1000*60*60*24)
+        );
+
+    if(difference <= 0){
+        difference = 1;
+    }
+
+    return Math.round((hours*10)/difference);
+}
+
+function displayAssignments(){
+
+    let list =
+        document.getElementById("assignmentList");
+
+    list.innerHTML="";
+
+    assignments.forEach(function(item){
+
+        let div =
+            document.createElement("div");
+
+        let level = "";
+
+        if(item.priority >= 20){
+            level = "high";
+        }
+        else if(item.priority >= 10){
+            level = "medium";
+        }
+        else{
+            level = "low";
+        }
+
+        div.className =
+            "assignment " + level;
+
+        div.innerHTML =
+            "<strong>" + item.name + "</strong><br>" +
+            "Due: " + item.dueDate + "<br>" +
+            "Hours Needed: " + item.hours + "<br>" +
+            "Priority Score: " + item.priority;
+
+        list.appendChild(div);
+    });
+
+    if(assignments.length > 0){
+
+        document.getElementById(
+            "urgentTask"
+        ).innerText =
+        assignments[0].name +
+        " (Priority: " +
+        assignments[0].priority +
+        ")";
+    }
+}
+
+</script>
+
+</body>
+</html>
