@@ -1,212 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Study Session Planner</title>
-
-<style>
-body{
-    font-family: Arial;
-    background: linear-gradient(135deg,#4facfe,#00f2fe);
-    min-height:100vh;
-    padding:20px;
-}
-
-.container{
-    max-width:900px;
-    margin:auto;
-    background:rgba(255,255,255,0.95);
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.2);
-}
-
-h1{
-    text-align:center;
-    color:#2c3e50;
-}
-
-input{
-    padding:10px;
-    margin:5px;
-    border-radius:8px;
-    border:1px solid #ccc;
-}
-
-button{
-    padding:10px 15px;
-    background:linear-gradient(45deg,#2c7be5,#00c6ff);
-    color:white;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-button:hover{
-    transform:scale(1.05);
-}
-
-.assignment{
-    padding:12px;
-    margin-top:10px;
-    border-radius:10px;
-    box-shadow:0 3px 8px rgba(0,0,0,0.1);
-}
-
-.high{background:#ffcccc;}
-.medium{background:#fff3cd;}
-.low{background:#d4edda;}
-.done{opacity:0.6; text-decoration:line-through;}
-
-#urgentTask{
-    font-weight:bold;
-    margin-top:15px;
-}
-.small{
-    font-size:0.9rem;
-    color:#333;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Session Planner</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#4facfe,#00f2fe); min-height:100vh; padding:20px; }
+        .container { max-width:900px; margin:auto; background:rgba(255,255,255,0.95); padding:20px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.2); }
+        h1 { text-align:center; color:#2c3e50; }
+        input { padding:10px; margin:5px; border-radius:8px; border:1px solid #ccc; }
+        button { padding:10px 15px; background:linear-gradient(45deg,#2c7be5,#00c6ff); color:white; border:none; border-radius:8px; cursor:pointer; transition:0.3s; }
+        button:hover { transform:scale(1.05); }
+        .assignment { padding:12px; margin-top:10px; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,0.1); }
+        .high { background:#ffcccc; }
+        .medium { background:#fff3cd; }
+        .low { background:#d4edda; }
+        .done { opacity:0.6; text-decoration:line-through; }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
+    <h1>Study Session Planner</h1>
+    <input type="text" id="assignmentName" placeholder="Assignment Name">
+    <input type="date" id="dueDate">
+    <input type="number" id="studyHours" placeholder="Hours Needed">
+    <button onclick="addAssignment()">Add Assignment</button>
 
-<h1>Study Session Planner</h1>
+    <h2>Most Urgent Task</h2>
+    <div id="urgentTask">None</div>
 
-<input type="text" id="assignmentName" placeholder="Assignment Name">
-<input type="date" id="dueDate">
-<input type="number" id="studyHours" placeholder="Hours Needed">
-
-<button onclick="addAssignment()">Add Assignment</button>
-
-<h2>Most Urgent Task</h2>
-<div id="urgentTask">None</div>
-
-<h2>Study Plan</h2>
-<div id="assignmentList"></div>
-
+    <h2>Study Plan</h2>
+    <div id="assignmentList"></div>
 </div>
 
-<script>
-
-let assignments =
-JSON.parse(localStorage.getItem("assignments")) || [];
-
-function saveData(){
-    localStorage.setItem("assignments", JSON.stringify(assignments));
-}
-
-function addAssignment(){
-
-    let name = document.getElementById("assignmentName").value;
-    let dueDate = document.getElementById("dueDate").value;
-    let hours = Number(document.getElementById("studyHours").value);
-
-    if(name === "" || dueDate === "" || hours <= 0){
-        alert("Please complete all fields.");
-        return;
-    }
-
-    let priority = calculatePriority(dueDate,hours);
-
-    assignments.push({
-        name,
-        dueDate,
-        hours,
-        priority,
-        completed:false
-    });
-
-    assignments.sort((a,b)=>b.priority-a.priority);
-
-    saveData();
-    displayAssignments();
-
-    document.getElementById("assignmentName").value="";
-    document.getElementById("dueDate").value="";
-    document.getElementById("studyHours").value="";
-}
-
-function calculatePriority(dueDate,hours){
-
-    let today = new Date();
-    let due = new Date(dueDate);
-
-    let diff =
-    Math.ceil((due - today)/(1000*60*60*24));
-
-    if(diff <= 0) diff = 1;
-
-    return Math.round((hours*10)/diff);
-}
-
-function toggleDone(index){
-    assignments[index].completed =
-    !assignments[index].completed;
-
-    saveData();
-    displayAssignments();
-}
-
-function deleteAssignment(index){
-    assignments.splice(index,1);
-    saveData();
-    displayAssignments();
-}
-
-function displayAssignments(){
-
-    let list = document.getElementById("assignmentList");
-    list.innerHTML="";
-
-    assignments.forEach((item,index)=>{
-
-        let div = document.createElement("div");
-
-        let level = item.priority >= 20 ? "high" :
-                     item.priority >= 10 ? "medium" : "low";
-
-        if(item.completed) level += " done";
-
-        let due = new Date(item.dueDate);
-        let today = new Date();
-        let daysLeft = Math.ceil((due - today)/(1000*60*60*24));
-
-        div.className = "assignment " + level;
-
-        div.innerHTML =
-        `<strong>${item.name}</strong><br>
-        Due: ${item.dueDate} (${daysLeft} days left)<br>
-        Hours Needed: ${item.hours}<br>
-        Priority: ${item.priority}<br><br>
-
-        <button onclick="toggleDone(${index})">
-        ${item.completed ? "Undo" : "Complete"}
-        </button>
-
-        <button onclick="deleteAssignment(${index})">
-        Delete
-        </button>`;
-
-        list.appendChild(div);
-    });
-
-    if(assignments.length > 0){
-        document.getElementById("urgentTask").innerText =
-        assignments[0].name + " (Priority: " +
-        assignments[0].priority + ")";
-    } else {
-        document.getElementById("urgentTask").innerText = "None";
-    }
-}
-
-displayAssignments();
-
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
